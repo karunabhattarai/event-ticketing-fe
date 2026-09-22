@@ -6,6 +6,7 @@ import { CheckoutPage } from './pages/public/CheckoutPage';
 import { RedirectPaymentPage } from './pages/public/RedirectPaymentPage';
 import { DynamicQrPaymentPage } from './pages/public/DynamicQrPaymentPage'; // added in Task 7
 import { OrderConfirmationPage } from './pages/public/OrderConfirmationPage';
+import { OrderStatusPage } from './pages/public/OrderStatusPage';
 
 function PaymentPage() {
   const [params] = useSearchParams();
@@ -22,6 +23,7 @@ export function App() {
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/checkout/:orderId/pay" element={<PaymentPage />} />
           <Route path="/order/:orderId/confirmation" element={<OrderConfirmationPage />} />
+          <Route path="/order/:orderId/status" element={<OrderStatusPage />} />
           {/* Later tasks add routes here */}
         </Routes>
       </BrowserRouter>
