@@ -25,8 +25,12 @@ export function DynamicQrPaymentPage() {
   });
 
   useEffect(() => {
-    if (statusQuery.data?.status === 'paid') {
-      navigate(`/order/${orderId}/confirmation`, { state: { accessToken: token } });
+    // The status poll can observe either 'paid' or 'fulfilled' as the success
+    // terminal state — the backend runs fulfillOrder synchronously as part of
+    // settling the order, so by the time this response is built the status
+    // has usually already advanced past 'paid' to 'fulfilled'.
+    if (statusQuery.data?.status === 'paid' || statusQuery.data?.status === 'fulfilled') {
+      navigate(`/order/${orderId}/confirmation?token=${encodeURIComponent(token)}`, { state: { accessToken: token } });
     }
   }, [statusQuery.data?.status, orderId, navigate, token]);
 

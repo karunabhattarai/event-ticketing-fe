@@ -1,23 +1,33 @@
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { OrganizerSidebar } from '../../components/OrganizerSidebar';
 import { StatusPill } from '../../components/StatusPill';
 import { Button } from '../../components/ui/button';
 import { listEventOrders, resendOrderEmail, refundOrder } from '../../api/orders';
+import { useOrganizerMutationError } from '../../lib/useMutationError';
 
 export function EventOrdersPage() {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
+  const handleMutationError = useOrganizerMutationError();
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const { data } = useQuery({ queryKey: ['event-orders', id], queryFn: () => listEventOrders(id!) });
 
   const resendMutation = useMutation({
     mutationFn: (orderId: string) => resendOrderEmail(id!, orderId),
+    onSuccess: () => setActionError(null),
+    onError: (error) => setActionError(handleMutationError(error)),
   });
 
   const refundMutation = useMutation({
     mutationFn: (orderId: string) => refundOrder(id!, orderId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['event-orders', id] }),
+    onSuccess: () => {
+      setActionError(null);
+      queryClient.invalidateQueries({ queryKey: ['event-orders', id] });
+    },
+    onError: (error) => setActionError(handleMutationError(error)),
   });
 
   return (
@@ -30,13 +40,14 @@ export function EventOrdersPage() {
             {data.stats.fulfilled} fulfilled · {data.stats.pending} pending · {data.stats.failed} failed
           </p>
         ) : null}
+        {actionError ? <p className="mb-3 text-xs text-red-600">{actionError}</p> : null}
         <div className="rounded-xl border border-border bg-white">
           {(data?.orders ?? []).map((order) => (
             <div key={order.id} className="flex items-center justify-between border-b border-border px-3.5 py-3 text-sm last:border-0">
-              <span>{order.guestEmail ?? ''}</span>
+              <span>{order.guestEmail ?? order.guestName ?? order.buyerId ?? ''}</span>
               <StatusPill status={order.status} />
               <div className="flex gap-2">
-                {order.status === 'fulfilled' ? (
+                {order.status === 'paid' || order.status === 'fulfilled' ? (
                   <Button variant="outline" onClick={() => resendMutation.mutate(order.id)} disabled={resendMutation.isPending}>
                     Resend
                   </Button>

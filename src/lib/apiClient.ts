@@ -14,6 +14,7 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
+      'X-Requested-With': 'event-ticketing-frontend',
       ...options.headers,
     },
   });

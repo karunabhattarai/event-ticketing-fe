@@ -10,11 +10,34 @@ export function OrderStatusPage() {
   const [params] = useSearchParams();
   const token = params.get('token') ?? '';
 
-  const { data: order } = useQuery({
+  const { data: order, isError } = useQuery({
     queryKey: ['order-status', orderId, token],
     queryFn: () => getOrderStatus(orderId!, token),
     enabled: !!orderId && !!token,
+    retry: false,
   });
+
+  if (!token) {
+    return (
+      <div>
+        <Nav variant="public" />
+        <p className="p-6 text-sm text-muted">
+          This link is missing its access token — use the link from your confirmation email.
+        </p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div>
+        <Nav variant="public" />
+        <p className="p-6 text-sm text-muted">
+          We couldn't find this order — check the link from your confirmation email.
+        </p>
+      </div>
+    );
+  }
 
   if (!order) {
     return (

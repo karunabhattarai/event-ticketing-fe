@@ -12,11 +12,17 @@ export function CheckinPage() {
 
   let resultBanner: { text: string; tone: 'green' | 'red' } | null = null;
   if (mutation.isSuccess) {
-    resultBanner = { text: `✓ Valid ticket — ${mutation.data.tierName} · ${mutation.data.holderName}`, tone: 'green' };
+    const holder = mutation.data.holderName ?? '(no name on order)';
+    resultBanner = { text: `✓ Valid ticket — ${mutation.data.tierName} · ${holder}`, tone: 'green' };
   } else if (mutation.isError && mutation.error instanceof ApiError) {
+    // 409's body has no `error` field (it's { result: 'already_used', checkedInAt }),
+    // so the message fallback wouldn't apply there anyway — everything else
+    // (400 invalid code, 404 wrong event, cancelled/refunded/void, 401 session
+    // expiry) has a real backend message worth showing at the door, not a
+    // generic "Invalid ticket" that hides what actually went wrong.
     resultBanner = mutation.error.status === 409
       ? { text: 'Already checked in', tone: 'red' }
-      : { text: 'Invalid ticket', tone: 'red' };
+      : { text: mutation.error.message, tone: 'red' };
   }
 
   return (

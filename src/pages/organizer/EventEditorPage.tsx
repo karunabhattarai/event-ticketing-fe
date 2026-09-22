@@ -7,6 +7,7 @@ import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { listMyEvents, createEvent, updateEvent } from '../../api/events';
 import { createTier } from '../../api/tiers';
+import { useOrganizerMutationError } from '../../lib/useMutationError';
 
 // datetime-local inputs use "YYYY-MM-DDTHH:mm" (no timezone/seconds) — this
 // pair converts to/from the ISO strings the API sends and expects.
@@ -20,6 +21,7 @@ export function EventEditorPage() {
   const { id } = useParams<{ id?: string }>();
   const isEditing = !!id;
   const queryClient = useQueryClient();
+  const handleMutationError = useOrganizerMutationError();
 
   // Editing a draft event requires the organizer-scoped list (public GET /events/:id
   // only returns published events) — see this task's plan note.
@@ -36,6 +38,8 @@ export function EventEditorPage() {
   const [newTierName, setNewTierName] = useState('');
   const [newTierPrice, setNewTierPrice] = useState('');
   const [newTierQuantity, setNewTierQuantity] = useState('');
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [tierError, setTierError] = useState<string | null>(null);
 
   useEffect(() => {
     if (existingEvent) {
@@ -58,11 +62,13 @@ export function EventEditorPage() {
     },
     onSuccess: () => {
       setSaved(true);
+      setSaveError(null);
       // 'my-events' is read from the cache to populate this form and the
       // dashboard/orders pages — without invalidating, a save/publish looks
       // like it silently did nothing everywhere else in the app.
       queryClient.invalidateQueries({ queryKey: ['my-events'] });
     },
+    onError: (error) => setSaveError(handleMutationError(error)),
   });
 
   const addTierMutation = useMutation({
@@ -71,8 +77,10 @@ export function EventEditorPage() {
       setNewTierName('');
       setNewTierPrice('');
       setNewTierQuantity('');
+      setTierError(null);
       queryClient.invalidateQueries({ queryKey: ['my-events'] });
     },
+    onError: (error) => setTierError(handleMutationError(error)),
   });
 
   return (
@@ -104,6 +112,7 @@ export function EventEditorPage() {
             Save
           </Button>
           {saved ? <p className="mt-2 text-xs text-green-700">Saved</p> : null}
+          {saveError ? <p className="mt-2 text-xs text-red-600">{saveError}</p> : null}
         </Card>
 
         {isEditing ? (
@@ -123,6 +132,7 @@ export function EventEditorPage() {
                 + Add
               </Button>
             </div>
+            {tierError ? <p className="mt-2 text-xs text-red-600">{tierError}</p> : null}
           </Card>
         ) : null}
       </div>

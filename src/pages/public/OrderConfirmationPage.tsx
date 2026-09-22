@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, useLocation, Link } from 'react-router-dom';
+import { useParams, useLocation, useSearchParams, Link } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Nav } from '../../components/Nav';
 import { Button } from '../../components/ui/button';
@@ -8,7 +8,11 @@ import { getOrderStatus, resendOrderConfirmationEmail } from '../../api/orders';
 export function OrderConfirmationPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const location = useLocation();
-  const accessToken = (location.state as { accessToken?: string } | null)?.accessToken;
+  const [params] = useSearchParams();
+  // Router state (set by DynamicQrPaymentPage's navigate) is the primary
+  // source, but it's lost on refresh/bookmark — fall back to a ?token= query
+  // param so a shared/reloaded confirmation link still works.
+  const accessToken = (location.state as { accessToken?: string } | null)?.accessToken ?? params.get('token') ?? undefined;
   const [resendSent, setResendSent] = useState(false);
 
   const { data: order } = useQuery({

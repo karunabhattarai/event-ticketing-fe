@@ -23,7 +23,17 @@ export type EventOrdersStats = {
   ticketsIssued: number; ticketsCheckedIn: number;
 };
 
-export function listEventOrders(eventId: string): Promise<{ orders: OrderDetail[]; stats: EventOrdersStats }> {
+// The organizer-facing order list deliberately omits accessToken (the
+// buyer's own credential — never exposed to the organizer) and prn, per the
+// backend's explicit `select` on this route. A logged-in buyer's order has
+// guestEmail: null and buyerId set instead, so identity display should fall
+// back through guestName/buyerId, not just guestEmail.
+export type OrganizerOrderSummary = Omit<OrderDetail, 'accessToken' | 'prn'> & {
+  guestName?: string | null;
+  buyerId?: string | null;
+};
+
+export function listEventOrders(eventId: string): Promise<{ orders: OrganizerOrderSummary[]; stats: EventOrdersStats }> {
   return apiRequest(`/events/${eventId}/orders`);
 }
 
