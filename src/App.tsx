@@ -16,6 +16,7 @@ import { DashboardPage } from './pages/organizer/DashboardPage';
 import { EventEditorPage } from './pages/organizer/EventEditorPage';
 import { EventOrdersPage } from './pages/organizer/EventOrdersPage';
 import { CheckinPage } from './pages/organizer/CheckinPage';
+import { RequireOrganizer } from './components/RequireOrganizer';
 
 function PaymentPage() {
   const [params] = useSearchParams();
@@ -38,11 +39,11 @@ export function App() {
           <Route path="/account/orders" element={<MyOrdersPage />} />
           <Route path="/organizer/login" element={<OrganizerLoginPage />} />
           <Route path="/organizer/register" element={<OrganizerRegisterPage />} />
-          <Route path="/organizer" element={<DashboardPage />} />
-          <Route path="/organizer/events/new" element={<EventEditorPage />} />
-          <Route path="/organizer/events/:id/edit" element={<EventEditorPage />} />
-          <Route path="/organizer/events/:id/orders" element={<EventOrdersPage />} />
-          <Route path="/organizer/checkin" element={<CheckinPage />} />
+          <Route path="/organizer" element={<RequireOrganizer><DashboardPage /></RequireOrganizer>} />
+          <Route path="/organizer/events/new" element={<RequireOrganizer><EventEditorPage /></RequireOrganizer>} />
+          <Route path="/organizer/events/:id/edit" element={<RequireOrganizer><EventEditorPage /></RequireOrganizer>} />
+          <Route path="/organizer/events/:id/orders" element={<RequireOrganizer><EventOrdersPage /></RequireOrganizer>} />
+          <Route path="/organizer/checkin" element={<RequireOrganizer><CheckinPage /></RequireOrganizer>} />
           {/* Later tasks add routes here */}
         </Routes>
       </BrowserRouter>
