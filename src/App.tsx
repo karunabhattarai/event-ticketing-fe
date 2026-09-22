@@ -14,6 +14,7 @@ import { OrganizerLoginPage } from './pages/organizer/OrganizerLoginPage';
 import { OrganizerRegisterPage } from './pages/organizer/OrganizerRegisterPage';
 import { DashboardPage } from './pages/organizer/DashboardPage';
 import { EventEditorPage } from './pages/organizer/EventEditorPage';
+import { EventOrdersPage } from './pages/organizer/EventOrdersPage';
 
 function PaymentPage() {
   const [params] = useSearchParams();
@@ -39,6 +40,7 @@ export function App() {
           <Route path="/organizer" element={<DashboardPage />} />
           <Route path="/organizer/events/new" element={<EventEditorPage />} />
           <Route path="/organizer/events/:id/edit" element={<EventEditorPage />} />
+          <Route path="/organizer/events/:id/orders" element={<EventOrdersPage />} />
           {/* Later tasks add routes here */}
         </Routes>
       </BrowserRouter>
