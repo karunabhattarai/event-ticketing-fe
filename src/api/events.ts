@@ -42,3 +42,7 @@ export function createEvent(data: { title: string; description: string; venue: s
 export function updateEvent(id: string, data: Partial<{ title: string; description: string; venue: string; startsAt: string; status: EventStatus }>): Promise<Event> {
   return apiRequest<Event>(`/events/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
 }
+
+export function getOrganizerStats(): Promise<{ ticketsSold: number; revenue: string; ticketsCheckedIn: number }> {
+  return apiRequest('/events/mine/stats');
+}

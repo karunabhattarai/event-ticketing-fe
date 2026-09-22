@@ -12,6 +12,7 @@ import { BuyerRegisterPage } from './pages/public/BuyerRegisterPage';
 import { MyOrdersPage } from './pages/public/MyOrdersPage';
 import { OrganizerLoginPage } from './pages/organizer/OrganizerLoginPage';
 import { OrganizerRegisterPage } from './pages/organizer/OrganizerRegisterPage';
+import { DashboardPage } from './pages/organizer/DashboardPage';
 
 function PaymentPage() {
   const [params] = useSearchParams();
@@ -34,6 +35,7 @@ export function App() {
           <Route path="/account/orders" element={<MyOrdersPage />} />
           <Route path="/organizer/login" element={<OrganizerLoginPage />} />
           <Route path="/organizer/register" element={<OrganizerRegisterPage />} />
+          <Route path="/organizer" element={<DashboardPage />} />
           {/* Later tasks add routes here */}
         </Routes>
       </BrowserRouter>
