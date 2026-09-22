@@ -6,10 +6,12 @@ import { TierPicker } from '../../components/TierPicker';
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
 import { getEvent } from '../../api/events';
+import { useCart } from '../../context/CartContext';
 
 export function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { setCart } = useCart();
   const [selections, setSelections] = useState<Record<string, number>>({});
 
   const { data: event, isLoading } = useQuery({
@@ -51,7 +53,10 @@ export function EventDetailPage() {
           <Button
             className="mt-4 w-full"
             disabled={!hasSelection}
-            onClick={() => navigate('/checkout', { state: { eventId: event.id, selections } })}
+            onClick={() => {
+              setCart({ eventId: event.id, selections });
+              navigate('/checkout');
+            }}
           >
             Get tickets
           </Button>
