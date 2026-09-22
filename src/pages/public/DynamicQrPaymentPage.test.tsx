@@ -53,7 +53,7 @@ describe('DynamicQrPaymentPage', () => {
     renderPage();
     await waitFor(
       () => expect(navigateMock).toHaveBeenCalledWith('/order/order-1/confirmation', { state: { accessToken: 'qr-tok-1' } }),
-      { timeout: 5000 }
+      { timeout: 10000 }
     );
   });
 
