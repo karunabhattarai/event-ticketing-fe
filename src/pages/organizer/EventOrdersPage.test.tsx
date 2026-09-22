@@ -57,4 +57,38 @@ describe('EventOrdersPage', () => {
     await userEvent.click(screen.getByText('Resend'));
     await waitFor(() => expect(resendCalled).toBe(true));
   });
+
+  it('only disables the acted-on row while refund/resend is pending, not every row', async () => {
+    let resolveRefund: () => void = () => {};
+    const refundStarted = new Promise<void>((resolve) => {
+      server.use(
+        http.get('http://localhost:3000/events/e1/orders', () =>
+          HttpResponse.json({
+            orders: [
+              { id: 'order-1', status: 'fulfilled', totalAmount: '3600', paymentMethod: 'redirect', guestEmail: 'a@example.com', items: [] },
+              { id: 'order-2', status: 'fulfilled', totalAmount: '1800', paymentMethod: 'redirect', guestEmail: 'b@example.com', items: [] },
+            ],
+            stats: { pending: 0, paid: 0, fulfilled: 2, failed: 0, refunded: 0, ticketsIssued: 3, ticketsCheckedIn: 0 },
+          })
+        ),
+        http.post('http://localhost:3000/events/e1/orders/order-1/refund', async () => {
+          resolve();
+          await new Promise<void>((r) => (resolveRefund = r));
+          return HttpResponse.json({ ok: true });
+        })
+      );
+    });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText('a@example.com')).toBeInTheDocument());
+
+    const refundButtons = screen.getAllByText('Refund');
+    await userEvent.click(refundButtons[0]);
+    await refundStarted;
+
+    expect(refundButtons[0]).toBeDisabled();
+    expect(refundButtons[1]).not.toBeDisabled();
+
+    resolveRefund();
+  });
 });

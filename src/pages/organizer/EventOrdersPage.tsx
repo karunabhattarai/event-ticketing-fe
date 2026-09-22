@@ -12,22 +12,30 @@ export function EventOrdersPage() {
   const queryClient = useQueryClient();
   const handleMutationError = useOrganizerMutationError();
   const [actionError, setActionError] = useState<string | null>(null);
+  // Which order's resend/refund is in flight — scopes the disabled state to the row
+  // being acted on, instead of disabling every row's buttons while any one request
+  // is pending.
+  const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
 
   const { data } = useQuery({ queryKey: ['event-orders', id], queryFn: () => listEventOrders(id!) });
 
   const resendMutation = useMutation({
     mutationFn: (orderId: string) => resendOrderEmail(id!, orderId),
+    onMutate: (orderId) => setPendingOrderId(orderId),
     onSuccess: () => setActionError(null),
     onError: (error) => setActionError(handleMutationError(error)),
+    onSettled: () => setPendingOrderId(null),
   });
 
   const refundMutation = useMutation({
     mutationFn: (orderId: string) => refundOrder(id!, orderId),
+    onMutate: (orderId) => setPendingOrderId(orderId),
     onSuccess: () => {
       setActionError(null);
       queryClient.invalidateQueries({ queryKey: ['event-orders', id] });
     },
     onError: (error) => setActionError(handleMutationError(error)),
+    onSettled: () => setPendingOrderId(null),
   });
 
   return (
@@ -48,12 +56,12 @@ export function EventOrdersPage() {
               <StatusPill status={order.status} />
               <div className="flex gap-2">
                 {order.status === 'paid' || order.status === 'fulfilled' ? (
-                  <Button variant="outline" onClick={() => resendMutation.mutate(order.id)} disabled={resendMutation.isPending}>
+                  <Button variant="outline" onClick={() => resendMutation.mutate(order.id)} disabled={pendingOrderId === order.id}>
                     Resend
                   </Button>
                 ) : null}
                 {order.status === 'paid' || order.status === 'fulfilled' ? (
-                  <Button variant="outline" onClick={() => refundMutation.mutate(order.id)} disabled={refundMutation.isPending}>
+                  <Button variant="outline" onClick={() => refundMutation.mutate(order.id)} disabled={pendingOrderId === order.id}>
                     Refund
                   </Button>
                 ) : null}
