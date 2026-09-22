@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Nav } from '../../components/Nav';
@@ -12,7 +12,12 @@ export function DynamicQrPaymentPage() {
 
   const generateMutation = useMutation({ mutationFn: () => generateDynamicQr(orderId!, token) });
 
+  // Guard against the effect firing twice (StrictMode double-invoke, or an
+  // unrelated re-render) — each call opens a new Fonepay QR/websocket session.
+  const firedRef = useRef(false);
   useEffect(() => {
+    if (firedRef.current) return;
+    firedRef.current = true;
     generateMutation.mutate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId, token]);

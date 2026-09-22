@@ -54,4 +54,40 @@ describe('RedirectPaymentPage', () => {
     expect(await screen.findByText('Order is not pending payment')).toBeInTheDocument();
     expect(screen.getByText('Try again')).toBeInTheDocument();
   });
+
+  it('only initiates payment once even if the effect runs again with the same orderId/token', async () => {
+    let initiateCallCount = 0;
+    server.use(
+      http.post('http://localhost:3000/payment/redirect/order-1/initiate', () => {
+        initiateCallCount++;
+        return HttpResponse.json({ url: 'https://dev-clientapi.fonepay.com/fake' });
+      })
+    );
+
+    const { rerender } = render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/checkout/order-1/pay']}>
+          <Routes>
+            <Route path="/checkout/:orderId/pay" element={<RedirectPaymentPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
+    );
+
+    await waitFor(() => expect(window.location.href).toBe('https://dev-clientapi.fonepay.com/fake'));
+
+    // Force a re-render (e.g. React StrictMode's double-invoke, or a parent
+    // re-render) with the same orderId/token — the effect must not re-fire.
+    rerender(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/checkout/order-1/pay']}>
+          <Routes>
+            <Route path="/checkout/:orderId/pay" element={<RedirectPaymentPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
+    );
+
+    expect(initiateCallCount).toBe(1);
+  });
 });

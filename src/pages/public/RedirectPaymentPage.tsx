@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { Nav } from '../../components/Nav';
@@ -17,7 +17,13 @@ export function RedirectPaymentPage() {
     },
   });
 
+  // initiatePayment is not idempotent (a second call opens a second Fonepay
+  // session) — guard against the effect firing twice, e.g. under React
+  // StrictMode's double-invoke or an unrelated re-render.
+  const firedRef = useRef(false);
   useEffect(() => {
+    if (firedRef.current) return;
+    firedRef.current = true;
     mutation.mutate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId, token]);

@@ -89,4 +89,38 @@ describe('DynamicQrPaymentPage', () => {
     renderPage();
     await waitFor(() => expect(screen.getByText(/payment failed/i)).toBeInTheDocument());
   });
+
+  it('only generates the QR once even if the effect runs again with the same orderId/token', async () => {
+    let generateCallCount = 0;
+    server.use(
+      http.post('http://localhost:3000/payment/dynamic-qr/order-1/generate', () => {
+        generateCallCount++;
+        return HttpResponse.json({ qrImageDataUrl: 'data:image/png;base64,ZmFrZQ==', expiresInSeconds: 900 });
+      }),
+      http.get('http://localhost:3000/payment/dynamic-qr/order-1/status', () => HttpResponse.json({ status: 'pending' }))
+    );
+
+    const { rerender } = render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/checkout/order-1/pay?method=dynamic_qr&token=qr-tok-1']}>
+          <Routes>
+            <Route path="/checkout/:orderId/pay" element={<DynamicQrPaymentPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
+    );
+    await waitFor(() => expect(screen.getByAltText(/qr code/i)).toBeInTheDocument());
+
+    rerender(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/checkout/order-1/pay?method=dynamic_qr&token=qr-tok-1']}>
+          <Routes>
+            <Route path="/checkout/:orderId/pay" element={<DynamicQrPaymentPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
+    );
+
+    expect(generateCallCount).toBe(1);
+  });
 });
