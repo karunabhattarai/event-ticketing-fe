@@ -12,3 +12,7 @@ export function getOrderStatus(orderId: string, token: string): Promise<OrderDet
 export function resendOrderConfirmationEmail(orderId: string, token: string): Promise<void> {
   return apiRequest(`/orders/${orderId}/resend?token=${encodeURIComponent(token)}`, { method: 'POST' });
 }
+
+export function listMyOrders(): Promise<OrderDetail[]> {
+  return apiRequest<OrderDetail[]>('/buyer/orders');
+}
