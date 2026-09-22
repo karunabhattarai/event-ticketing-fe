@@ -39,4 +39,15 @@ describe('OrderStatusPage', () => {
     renderAt('/order/order-1/status?token=tok-1');
     await waitFor(() => expect(screen.getByText(/try again/i)).toBeInTheDocument());
   });
+
+  it('shows an explicit message when the token is missing from the URL', () => {
+    renderAt('/order/order-1/status');
+    expect(screen.getByText(/missing its access token/i)).toBeInTheDocument();
+  });
+
+  it('shows an error message when the order lookup fails (e.g. wrong token)', async () => {
+    server.use(http.get('http://localhost:3000/orders/order-1', () => HttpResponse.json({ error: 'Forbidden' }, { status: 403 })));
+    renderAt('/order/order-1/status?token=wrong-token');
+    await waitFor(() => expect(screen.getByText(/couldn't find this order/i)).toBeInTheDocument());
+  });
 });
