@@ -90,4 +90,37 @@ describe('EventEditorPage', () => {
 
     await waitFor(() => expect(screen.getByText('General')).toBeInTheDocument());
   });
+
+  it('disables + Add until the tier form has a name and a valid positive price and quantity', async () => {
+    server.use(
+      http.get('http://localhost:3000/events/mine', () =>
+        HttpResponse.json([
+          { id: 'e1', title: 'X', description: 'd', venue: 'v', startsAt: '2026-12-01T18:00:00Z', status: 'draft', tiers: [] },
+        ])
+      )
+    );
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/organizer/events/e1/edit']}>
+          <Routes>
+            <Route path="/organizer/events/:id/edit" element={<EventEditorPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
+    );
+
+    await waitFor(() => expect(screen.getByPlaceholderText('Name')).toBeInTheDocument());
+    const addButton = screen.getByText('+ Add');
+    expect(addButton).toBeDisabled(); // all fields empty
+
+    await userEvent.type(screen.getByPlaceholderText('Name'), 'General');
+    await userEvent.type(screen.getByPlaceholderText('Price'), 'abc');
+    await userEvent.type(screen.getByPlaceholderText('Quantity'), '10');
+    expect(addButton).toBeDisabled(); // non-numeric price
+
+    await userEvent.clear(screen.getByPlaceholderText('Price'));
+    await userEvent.type(screen.getByPlaceholderText('Price'), '800');
+    expect(addButton).not.toBeDisabled();
+  });
 });

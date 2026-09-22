@@ -71,8 +71,17 @@ export function EventEditorPage() {
     onError: (error) => setSaveError(handleMutationError(error)),
   });
 
+  const parsedTierPrice = Number(newTierPrice);
+  const parsedTierQuantity = Number(newTierQuantity);
+  const isTierFormValid =
+    newTierName.trim().length > 0 &&
+    Number.isFinite(parsedTierPrice) &&
+    parsedTierPrice > 0 &&
+    Number.isInteger(parsedTierQuantity) &&
+    parsedTierQuantity > 0;
+
   const addTierMutation = useMutation({
-    mutationFn: () => createTier(id!, { name: newTierName, price: Number(newTierPrice), quantityTotal: Number(newTierQuantity) }),
+    mutationFn: () => createTier(id!, { name: newTierName, price: parsedTierPrice, quantityTotal: parsedTierQuantity }),
     onSuccess: () => {
       setNewTierName('');
       setNewTierPrice('');
@@ -128,7 +137,7 @@ export function EventEditorPage() {
               <Input placeholder="Name" value={newTierName} onChange={(e) => setNewTierName(e.target.value)} />
               <Input placeholder="Price" value={newTierPrice} onChange={(e) => setNewTierPrice(e.target.value)} />
               <Input placeholder="Quantity" value={newTierQuantity} onChange={(e) => setNewTierQuantity(e.target.value)} />
-              <Button variant="outline" onClick={() => addTierMutation.mutate()} disabled={addTierMutation.isPending}>
+              <Button variant="outline" onClick={() => addTierMutation.mutate()} disabled={addTierMutation.isPending || !isTierFormValid}>
                 + Add
               </Button>
             </div>
