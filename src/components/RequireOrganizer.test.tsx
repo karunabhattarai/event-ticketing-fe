@@ -45,4 +45,21 @@ describe('RequireOrganizer', () => {
 
     await waitFor(() => expect(navigateMock).toHaveBeenCalledWith('/organizer/login'));
   });
+
+  it('does not render children on a non-401 error (e.g. network failure or 500)', async () => {
+    server.use(http.get('http://localhost:3000/events/mine', () => HttpResponse.error()));
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <RequireOrganizer>
+            <div>Protected content</div>
+          </RequireOrganizer>
+        </MemoryRouter>
+      </QueryClientProvider>
+    );
+
+    await waitFor(() => expect(navigateMock).toHaveBeenCalledWith('/organizer/login'));
+    expect(screen.queryByText('Protected content')).not.toBeInTheDocument();
+  });
 });
