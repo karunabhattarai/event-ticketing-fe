@@ -10,6 +10,8 @@ import { OrderStatusPage } from './pages/public/OrderStatusPage';
 import { BuyerLoginPage } from './pages/public/BuyerLoginPage';
 import { BuyerRegisterPage } from './pages/public/BuyerRegisterPage';
 import { MyOrdersPage } from './pages/public/MyOrdersPage';
+import { OrganizerLoginPage } from './pages/organizer/OrganizerLoginPage';
+import { OrganizerRegisterPage } from './pages/organizer/OrganizerRegisterPage';
 
 function PaymentPage() {
   const [params] = useSearchParams();
@@ -30,6 +32,8 @@ export function App() {
           <Route path="/login" element={<BuyerLoginPage />} />
           <Route path="/register" element={<BuyerRegisterPage />} />
           <Route path="/account/orders" element={<MyOrdersPage />} />
+          <Route path="/organizer/login" element={<OrganizerLoginPage />} />
+          <Route path="/organizer/register" element={<OrganizerRegisterPage />} />
           {/* Later tasks add routes here */}
         </Routes>
       </BrowserRouter>
