@@ -4,9 +4,16 @@ import type { Event } from '../api/events';
 
 export function EventCard({ event }: { event: Event }) {
   const date = new Date(event.startsAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-  const lowestPrice = event.tiers?.length
-    ? Math.min(...event.tiers.map((t) => Number(t.price)))
-    : null;
+  const now = new Date();
+  // Only advertise a price for tiers you could actually buy right now — a sold-out
+  // or not-yet/no-longer-on-sale tier being the cheapest would otherwise show a
+  // price nothing currently purchasable actually offers.
+  const availableTiers = (event.tiers ?? []).filter((t) => {
+    const notYetOnSale = !!t.salesStartAt && new Date(t.salesStartAt) > now;
+    const salesEnded = !!t.salesEndAt && new Date(t.salesEndAt) < now;
+    return !notYetOnSale && !salesEnded && t.quantityTotal - t.quantitySold > 0;
+  });
+  const lowestPrice = availableTiers.length ? Math.min(...availableTiers.map((t) => Number(t.price))) : null;
 
   return (
     <Link to={`/events/${event.id}`}>

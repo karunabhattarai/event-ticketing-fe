@@ -24,10 +24,11 @@ describe('TierPicker', () => {
     expect(plusButtons[0]).toBeDisabled();
   });
 
-  it('disables + for a sold-out tier', () => {
+  it('disables + and labels a sold-out tier', () => {
     render(<TierPicker tiers={tiers} selections={{}} onChange={vi.fn()} />);
     const plusButtons = screen.getAllByText('+');
     expect(plusButtons[1]).toBeDisabled(); // VIP is fully sold
+    expect(screen.getByText(/Sold out/)).toBeInTheDocument();
   });
 
   it('decrements but never below 0', async () => {
