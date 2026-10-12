@@ -14,11 +14,23 @@ export function EventDetailPage() {
   const { setCart } = useCart();
   const [selections, setSelections] = useState<Record<string, number>>({});
 
-  const { data: event, isLoading } = useQuery({
+  const { data: event, isLoading, isError } = useQuery({
     queryKey: ['event', id],
     queryFn: () => getEvent(id!),
     enabled: !!id,
+    retry: false,
   });
+
+  if (isError) {
+    return (
+      <div>
+        <Nav variant="public" />
+        <p className="p-6 text-sm text-muted">
+          We couldn't find this event — it may have been removed or cancelled.
+        </p>
+      </div>
+    );
+  }
 
   if (isLoading || !event) {
     return (
@@ -30,6 +42,14 @@ export function EventDetailPage() {
   }
 
   const hasSelection = Object.values(selections).some((q) => q > 0);
+  const hasPassed = new Date(event.startsAt) < new Date();
+  const tiers = event.tiers ?? [];
+  const now = new Date();
+  const isUnavailable = (t: (typeof tiers)[number]) =>
+    (t.salesStartAt && new Date(t.salesStartAt) > now) ||
+    (t.salesEndAt && new Date(t.salesEndAt) < now) ||
+    t.quantityTotal - t.quantitySold <= 0;
+  const allUnavailable = tiers.length > 0 && tiers.every(isUnavailable);
 
   return (
     <div>
@@ -46,13 +66,18 @@ export function EventDetailPage() {
         <Card>
           <div className="mb-3 text-sm font-bold">Choose tickets</div>
           <TierPicker
-            tiers={event.tiers ?? []}
+            tiers={tiers}
             selections={selections}
             onChange={(tierId, quantity) => setSelections((s) => ({ ...s, [tierId]: quantity }))}
           />
+          {hasPassed ? (
+            <p className="mt-3 text-xs text-muted">This event has already taken place.</p>
+          ) : allUnavailable ? (
+            <p className="mt-3 text-xs text-muted">No tickets are currently available for this event.</p>
+          ) : null}
           <Button
             className="mt-4 w-full"
-            disabled={!hasSelection}
+            disabled={hasPassed || allUnavailable || !hasSelection}
             onClick={() => {
               setCart({ eventId: event.id, selections });
               navigate('/checkout');

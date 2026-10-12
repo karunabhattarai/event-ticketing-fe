@@ -20,10 +20,11 @@ export function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('redirect');
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  const { data: event } = useQuery({
+  const { data: event, isError } = useQuery({
     queryKey: ['event', cart?.eventId],
     queryFn: () => getEvent(cart!.eventId),
     enabled: !!cart?.eventId,
+    retry: false,
   });
 
   const mutation = useMutation({
@@ -31,11 +32,38 @@ export function CheckoutPage() {
     onSuccess: (order) => navigate(`/checkout/${order.id}/pay?method=${order.paymentMethod}&token=${order.accessToken}`),
   });
 
-  if (!cart || !event) {
+  if (!cart) {
     return (
       <div>
         <Nav variant="public" />
         <p className="p-6 text-sm text-muted">Your cart is empty. <a className="text-accent" href="/">Browse events</a>.</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div>
+        <Nav variant="public" />
+        <p className="p-6 text-sm text-muted">Couldn't load this event — <a className="text-accent" href="/">browse events</a> and try again.</p>
+      </div>
+    );
+  }
+
+  if (!event) {
+    return (
+      <div>
+        <Nav variant="public" />
+        <p className="p-6 text-sm text-muted">Loading...</p>
+      </div>
+    );
+  }
+
+  if (new Date(event.startsAt) < new Date()) {
+    return (
+      <div>
+        <Nav variant="public" />
+        <p className="p-6 text-sm text-muted">This event has already taken place. <a className="text-accent" href="/">Browse events</a>.</p>
       </div>
     );
   }

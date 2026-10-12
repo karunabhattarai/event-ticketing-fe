@@ -38,7 +38,7 @@ function mockEventDetail() {
   server.use(
     http.get('http://localhost:3000/events/e1', () =>
       HttpResponse.json({
-        id: 'e1', title: 'Rock the Valley', venue: 'Ktm', startsAt: '2026-09-28T18:00:00Z', description: 'd', status: 'published',
+        id: 'e1', title: 'Rock the Valley', venue: 'Ktm', startsAt: '2099-09-28T18:00:00Z', description: 'd', status: 'published',
         tiers: [{ id: 't1', eventId: 'e1', name: 'General', price: '800', currency: 'NPR', quantityTotal: 100, quantitySold: 0 }],
       })
     )
@@ -99,5 +99,21 @@ describe('CheckoutPage', () => {
 
     expect(await screen.findByText('Not enough tickets remaining for General')).toBeInTheDocument();
     expect(navigateMock).not.toHaveBeenCalled();
+  });
+
+  it('blocks checkout with a message when the event has already taken place', async () => {
+    server.use(
+      http.get('http://localhost:3000/events/e1', () =>
+        HttpResponse.json({
+          id: 'e1', title: 'Old Show', venue: 'Ktm', startsAt: '2020-01-01T18:00:00Z', description: 'd', status: 'published',
+          tiers: [{ id: 't1', eventId: 'e1', name: 'General', price: '800', currency: 'NPR', quantityTotal: 100, quantitySold: 0 }],
+        })
+      )
+    );
+
+    renderWithCart();
+
+    expect(await screen.findByText(/already taken place/i)).toBeInTheDocument();
+    expect(screen.queryByText('Continue to pay')).not.toBeInTheDocument();
   });
 });

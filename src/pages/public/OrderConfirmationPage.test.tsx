@@ -62,6 +62,13 @@ describe('OrderConfirmationPage', () => {
     expect(await screen.findByText('Email sent')).toBeInTheDocument();
   });
 
+  it('shows an error message instead of spinning forever when the order cannot be loaded', async () => {
+    server.use(http.get('http://localhost:3000/orders/order-1', () => HttpResponse.json({ error: 'Not found' }, { status: 404 })));
+    renderConfirmed();
+
+    expect(await screen.findByText(/couldn't find this order/i)).toBeInTheDocument();
+  });
+
   it('shows a fallback link to the status page when no access token is in state', () => {
     render(
       <QueryClientProvider client={queryClient}>

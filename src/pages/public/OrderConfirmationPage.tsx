@@ -15,10 +15,11 @@ export function OrderConfirmationPage() {
   const accessToken = (location.state as { accessToken?: string } | null)?.accessToken ?? params.get('token') ?? undefined;
   const [resendSent, setResendSent] = useState(false);
 
-  const { data: order } = useQuery({
+  const { data: order, isError } = useQuery({
     queryKey: ['order-status', orderId, accessToken],
     queryFn: () => getOrderStatus(orderId!, accessToken!),
     enabled: !!orderId && !!accessToken,
+    retry: false,
   });
 
   const resendMutation = useMutation({
@@ -32,6 +33,18 @@ export function OrderConfirmationPage() {
         <Nav variant="public" />
         <div className="p-6 text-center text-sm">
           <p className="mb-2 text-muted">Check your email for your ticket confirmation.</p>
+          <Link to={`/order/${orderId}/status`} className="text-accent">View your order</Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div>
+        <Nav variant="public" />
+        <div className="p-6 text-center text-sm">
+          <p className="mb-2 text-muted">We couldn't find this order — check the link from your confirmation email.</p>
           <Link to={`/order/${orderId}/status`} className="text-accent">View your order</Link>
         </div>
       </div>
