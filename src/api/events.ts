@@ -10,6 +10,8 @@ export type TicketTier = {
   currency: string;
   quantityTotal: number;
   quantitySold: number;
+  salesStartAt?: string | null;
+  salesEndAt?: string | null;
 };
 
 export type Event = {
@@ -23,8 +25,10 @@ export type Event = {
   tiers?: TicketTier[];
 };
 
-export function listPublishedEvents(): Promise<Event[]> {
-  return apiRequest<Event[]>('/events');
+export const EVENTS_PAGE_SIZE = 20;
+
+export function listPublishedEvents(when: 'upcoming' | 'past' = 'upcoming', page = 1): Promise<Event[]> {
+  return apiRequest<Event[]>(`/events?when=${when}&page=${page}&pageSize=${EVENTS_PAGE_SIZE}`);
 }
 
 export function getEvent(id: string): Promise<Event> {
