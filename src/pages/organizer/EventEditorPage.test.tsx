@@ -12,7 +12,7 @@ describe('EventEditorPage', () => {
   it('creates a new event on submit when there is no :id param', async () => {
     server.use(
       http.post('http://localhost:3000/events', () =>
-        HttpResponse.json({ id: 'e-new', title: 'New Show', description: 'd', venue: 'v', startsAt: '2026-12-01T18:00:00Z', status: 'draft' }, { status: 201 })
+        HttpResponse.json({ id: 'e-new', title: 'New Show', description: 'd', venue: 'v', startsAt: '2099-12-01T18:00:00Z', status: 'draft' }, { status: 201 })
       )
     );
 
@@ -28,7 +28,7 @@ describe('EventEditorPage', () => {
 
     await userEvent.type(screen.getByPlaceholderText('Event title'), 'New Show');
     await userEvent.type(screen.getByPlaceholderText('Venue'), 'v');
-    await userEvent.type(screen.getByLabelText('Event date and time'), '2026-12-01T18:00');
+    await userEvent.type(screen.getByLabelText('Event date and time'), '2099-12-01T18:00');
     await userEvent.click(screen.getByText('Save'));
 
     await waitFor(() => expect(screen.getByText(/saved/i)).toBeInTheDocument());
@@ -38,13 +38,13 @@ describe('EventEditorPage', () => {
     server.use(
       http.get('http://localhost:3000/events/mine', () =>
         HttpResponse.json([
-          { id: 'e1', title: 'X', description: 'd', venue: 'v', startsAt: '2026-12-01T18:00:00Z', status: 'draft', tiers: [] },
+          { id: 'e1', title: 'X', description: 'd', venue: 'v', startsAt: '2099-12-01T18:00:00Z', status: 'draft', tiers: [] },
         ])
       ),
       http.patch('http://localhost:3000/events/e1', async ({ request }) => {
         const body = (await request.json()) as { status: string };
         expect(body.status).toBe('published');
-        return HttpResponse.json({ id: 'e1', title: 'X', description: 'd', venue: 'v', startsAt: '2026-12-01T18:00:00Z', status: 'published' });
+        return HttpResponse.json({ id: 'e1', title: 'X', description: 'd', venue: 'v', startsAt: '2099-12-01T18:00:00Z', status: 'published' });
       })
     );
 
@@ -73,7 +73,7 @@ describe('EventEditorPage', () => {
     server.use(
       http.get('http://localhost:3000/events/mine', () =>
         HttpResponse.json([
-          { id: 'e1', title: 'X', description: 'd', venue: 'v', startsAt: '2026-12-01T18:00:00Z', status: 'draft', tiers: [{ id: 't1', eventId: 'e1', name: 'General', price: '800', currency: 'NPR', quantityTotal: 100, quantitySold: 12 }] },
+          { id: 'e1', title: 'X', description: 'd', venue: 'v', startsAt: '2099-12-01T18:00:00Z', status: 'draft', tiers: [{ id: 't1', eventId: 'e1', name: 'General', price: '800', currency: 'NPR', quantityTotal: 100, quantitySold: 12 }] },
         ])
       )
     );
@@ -95,7 +95,7 @@ describe('EventEditorPage', () => {
     server.use(
       http.get('http://localhost:3000/events/mine', () =>
         HttpResponse.json([
-          { id: 'e1', title: 'X', description: 'd', venue: 'v', startsAt: '2026-12-01T18:00:00Z', status: 'draft', tiers: [] },
+          { id: 'e1', title: 'X', description: 'd', venue: 'v', startsAt: '2099-12-01T18:00:00Z', status: 'draft', tiers: [] },
         ])
       )
     );
