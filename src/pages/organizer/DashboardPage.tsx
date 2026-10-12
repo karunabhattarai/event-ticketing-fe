@@ -1,13 +1,27 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { OrganizerSidebar } from '../../components/OrganizerSidebar';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { listMyEvents, getOrganizerStats } from '../../api/events';
+import { useOrganizerMutationError } from '../../lib/useMutationError';
 
 export function DashboardPage() {
-  const { data: events } = useQuery({ queryKey: ['my-events'], queryFn: listMyEvents });
-  const { data: stats } = useQuery({ queryKey: ['organizer-stats'], queryFn: getOrganizerStats });
+  const handleError = useOrganizerMutationError();
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const { data: events, error: eventsError } = useQuery({ queryKey: ['my-events'], queryFn: listMyEvents, retry: false });
+  const { data: stats, error: statsError } = useQuery({ queryKey: ['organizer-stats'], queryFn: getOrganizerStats, retry: false });
+
+  // RequireOrganizer only probes once at route entry — a cookie that expires
+  // later, while already on this page, needs the same handling here (401 →
+  // login, anything else → a visible message), or the page silently stops
+  // updating with no way back to login and no explanation.
+  useEffect(() => {
+    const error = eventsError ?? statsError;
+    if (error) setLoadError(handleError(error));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventsError, statsError]);
 
   return (
     <div className="flex">
@@ -17,6 +31,7 @@ export function DashboardPage() {
           <h1 className="text-lg font-bold">My events</h1>
           <Link to="/organizer/events/new"><Button>+ New event</Button></Link>
         </div>
+        {loadError ? <p className="mb-3 text-xs text-red-600">{loadError}</p> : null}
         {stats ? (
           <div className="mb-5 grid grid-cols-3 gap-3">
             <Card>

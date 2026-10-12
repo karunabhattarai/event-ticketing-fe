@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -14,6 +14,10 @@ vi.mock('react-router-dom', async (importOriginal) => {
 });
 
 describe('MyOrdersPage', () => {
+  afterEach(() => {
+    navigateMock.mockClear();
+  });
+
   it('lists the buyer\'s orders', async () => {
     server.use(
       http.get('http://localhost:3000/buyer/orders', () =>
@@ -44,5 +48,20 @@ describe('MyOrdersPage', () => {
     );
 
     await waitFor(() => expect(navigateMock).toHaveBeenCalledWith('/login'));
+  });
+
+  it('shows an error message (not an infinite loading state) on a non-401 failure', async () => {
+    server.use(http.get('http://localhost:3000/buyer/orders', () => HttpResponse.json({ error: 'boom' }, { status: 500 })));
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <MyOrdersPage />
+        </MemoryRouter>
+      </QueryClientProvider>
+    );
+
+    expect(await screen.findByText('boom')).toBeInTheDocument();
+    expect(navigateMock).not.toHaveBeenCalled();
   });
 });

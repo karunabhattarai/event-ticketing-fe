@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { OrganizerSidebar } from '../../components/OrganizerSidebar';
@@ -17,7 +17,16 @@ export function EventOrdersPage() {
   // is pending.
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
 
-  const { data } = useQuery({ queryKey: ['event-orders', id], queryFn: () => listEventOrders(id!) });
+  const { data, error } = useQuery({ queryKey: ['event-orders', id], queryFn: () => listEventOrders(id!), retry: false });
+
+  // RequireOrganizer only probes once at route entry — a cookie that expires
+  // later, while already on this page, needs the same handling here (401 →
+  // login, a foreign/missing event id 404 → a visible message, not a redirect
+  // that would misleadingly imply the session expired).
+  useEffect(() => {
+    if (error) setActionError(handleMutationError(error));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [error]);
 
   const resendMutation = useMutation({
     mutationFn: (orderId: string) => resendOrderEmail(id!, orderId),

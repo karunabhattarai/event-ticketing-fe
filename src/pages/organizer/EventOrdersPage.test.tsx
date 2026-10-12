@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -7,6 +7,12 @@ import { HttpResponse, http } from 'msw';
 import { server } from '../../../tests/mocks/server';
 import { queryClient } from '../../lib/queryClient';
 import { EventOrdersPage } from './EventOrdersPage';
+
+const navigateMock = vi.fn();
+vi.mock('react-router-dom', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-router-dom')>();
+  return { ...actual, useNavigate: () => navigateMock };
+});
 
 function renderPage() {
   render(
@@ -21,6 +27,10 @@ function renderPage() {
 }
 
 describe('EventOrdersPage', () => {
+  afterEach(() => {
+    navigateMock.mockClear();
+  });
+
   it('lists orders with stats', async () => {
     server.use(
       http.get('http://localhost:3000/events/e1/orders', () =>
@@ -90,5 +100,22 @@ describe('EventOrdersPage', () => {
     expect(refundButtons[1]).not.toBeDisabled();
 
     resolveRefund();
+  });
+
+  it('redirects to organizer login on a 401 mid-session', async () => {
+    server.use(http.get('http://localhost:3000/events/e1/orders', () => HttpResponse.json({ error: 'Not authenticated' }, { status: 401 })));
+
+    renderPage();
+
+    await waitFor(() => expect(navigateMock).toHaveBeenCalledWith('/organizer/login'));
+  });
+
+  it('shows an error message (not a redirect) when the event id is not owned/found', async () => {
+    server.use(http.get('http://localhost:3000/events/e1/orders', () => HttpResponse.json({ error: 'Event not found' }, { status: 404 })));
+
+    renderPage();
+
+    expect(await screen.findByText('Event not found')).toBeInTheDocument();
+    expect(navigateMock).not.toHaveBeenCalled();
   });
 });
